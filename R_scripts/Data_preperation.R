@@ -41,7 +41,7 @@ writeRaster(tr_elv , paste0(OUT, "elevation.tif"), overwrite=TRUE)
 ela <- raster(paste0(OUT, "elevation.tif"))
 # crop extent to model domain
 ela_subset <- crop(ela, 
-                     extent(-81.3, -59.3083333, -12.05, 12.4333333))
+                     extent(-81.3, -55.3083333, -12.05, 12.4333333))
 
 x11();plot(ela_subset)
 writeRaster(ela_subset , paste0(OUT, "topology/study_area_elevation.tif"), overwrite=TRUE)
@@ -249,6 +249,44 @@ subbasins <- raster(paste0(DIR, "subbasin_90.tif"))
 ######################################################### and save to disk subbasin study area and model extent ########################################
 ########################################################################################################################################################
 
+basin <- raster(paste0(DIR, "subbasins_90.tif"))
+# create data frame with sub-catchment id column
+basin_id <- as.data.frame(basin)
+basin_id <- na.omit(basin_id)
+basin_id <- as.data.frame(basin_id[!duplicated(basin_id$subbasins_90),])
+colnames(basin_id) <- "basin_id"
+# model domain
+basin_subset <- crop(basin, extent(-81.3, -55.3083333, -12.05, 12.4333333))
+# study area
+basin_subset <- crop(basin, extent(-81.73828, -66.48926, -4.66184, 12.4333333))
+
+basin_ID <- unique(basin_subset)
+
+indx = which(!(basin[] %in% basin_ID))
+basin[indx] = NA
+# basin_crop <- trim(basin, 
+#                values= NA) 
+# indx <- which(basin[] %in% basin_ID)
+# basins <- basin[indx]
+basins <-raster::trim(basin,
+                      values= NA)
+
+x11(); plot(basins)
+
+basin_id <- as.data.frame(basins)
+basin_id <- na.omit(basin_id)
+basin_id <- as.data.frame(basin_id[!duplicated(basin_id$subbasins_90),])
+colnames(basin_id) <- "basin_id"
+
+bas_dat <- basin_id
+bas_dat$basins <- basin_id$basin_id
+bas_dat$amount <- 1
+
+study_area <- reclassify(basin, bas_dat, right = NA)
+
+
+raster::writeRaster(study_area, paste0(DIR, "study_crop_basin.tif"), overwrite = TRUE)
+
 # create a stack e.g. for points extraction
 sub_overlay <- stack(basins, 
                      subbasins)
@@ -340,7 +378,7 @@ NAvalue(flow1k)
 NAvalue(flow1k) <- -1
 
 # define the extent to be the extent of the study area
-exte <- extent(-81.3, -59.3083333, -12.05, 12.4333333)
+exte <- extent(-81.3, -55.3083333, -12.05, 12.4333333)
 
 bioclim_stack <- stack(bioclim_list)
 landcover_stack <- stack(landcover_list)

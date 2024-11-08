@@ -61,3 +61,7 @@ spec_prob1 <- reclassify(basin, spec_prob1, right = NA)
 writeRaster(spec_prob1,
             paste0(OUT, "stacked_habitat_suitability.tif"),
             overwrite = TRUE)
+
+##################################################################################################################################################################################################################################################################################################################
+
+### add line of code to produce the stacked habitat suitability maps for endemic and threatened species
